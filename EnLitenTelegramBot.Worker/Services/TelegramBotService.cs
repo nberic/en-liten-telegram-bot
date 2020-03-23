@@ -27,7 +27,17 @@ namespace EnLitenTelegramBot.Worker.Services
         {
             _logger.LogInformation($"Getting updates from the URL: { _bot.UpdatesUrl }");
             var httpClient = _httpClientFactory.CreateClient();
-            var response = await httpClient.GetStringAsync($"{ _bot.UpdatesUrl }");
+
+            string response = null;
+            try
+            {
+                response = await httpClient.GetStringAsync($"{ _bot.UpdatesUrl }");
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Exception occured: { e.ToString() }");
+            }
+
             _logger.LogInformation($"Returned payload is: { response }");
             return response;
         }

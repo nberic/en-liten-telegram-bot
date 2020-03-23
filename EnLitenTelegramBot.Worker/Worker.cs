@@ -27,7 +27,16 @@ namespace EnLitenTelegramBot.Worker
             _logger.LogInformation($"Worker running at { DateTimeOffset.Now }");
             while (!stoppingToken.IsCancellationRequested)
             {
-                var updates = await _botService.GetUpdates();
+                string updates = null;
+                try
+                {
+                    updates = await _botService.GetUpdates();
+                }
+                catch (Exception e)
+                {
+                    _logger.LogCritical(e.StackTrace);
+                }
+                
                 _logger.LogInformation($"Returned updates: { updates }");
                 await Task.Delay(5000, stoppingToken);
 
