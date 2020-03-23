@@ -10,6 +10,6 @@ namespace EnLitenTelegramBot.Worker.Models
             _botConfiguration = botConfiguration;
         }
         public string ApiUrl => $"https://api.telegram.org/bot{ _botConfiguration.Token }";
-        public string UpdatesUrl => $"{ ApiUrl }/{ _botConfiguration.UpdatesPath }";
+        public string UpdatesUrl => $"{ ApiUrl }/{ _botConfiguration.UpdatesMethod }";
     }
 }
