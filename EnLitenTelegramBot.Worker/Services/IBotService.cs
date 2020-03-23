@@ -19,6 +19,6 @@ namespace EnLitenTelegramBot.Worker.Services
         /// <param name="chatId"> ID of the chat to which the message will be sent</param>
         /// <param name="text"> Text which will be sent to the chat</param>
         /// <returns></returns>
-        Task SendMessage(int chatId, string text);
+        Task SendMessage(int chatId, string text, int messageId);
     }
 }

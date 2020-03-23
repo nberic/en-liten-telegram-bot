@@ -8,6 +8,7 @@ using System.Text.Json;
 using EnLitenTelegramBot.Worker.Models.ApiTypes;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace EnLitenTelegramBot.Worker.Services
 {
@@ -54,7 +55,9 @@ namespace EnLitenTelegramBot.Worker.Services
             }
 
             _logger.LogInformation($"Returned payload is: { updates }");
-            return updates;
+
+            // return only updates to which it hasn't been responded
+            return updates.Where(update => update.Message.MessageId > _bot.HighestRespondedMessageId);
         }
 
         /// <summary>
@@ -63,7 +66,7 @@ namespace EnLitenTelegramBot.Worker.Services
         /// <param name="chatId"> ID of the chat to which the message will be sent</param>
         /// <param name="text"> Text which will be sent to the chat</param>
         /// <returns></returns>
-        public async Task SendMessage(int chatId, string text)
+        public async Task SendMessage(int chatId, string text, int messageId)
         {
             var httpClient = _httpClientFactory.CreateClient();
 
@@ -91,6 +94,10 @@ namespace EnLitenTelegramBot.Worker.Services
             {
                 _logger.LogError(e.ToString());
             }
+            // update the highest responed messageId
+            _bot.HighestRespondedMessageId = messageId > _bot.HighestRespondedMessageId
+                ? messageId
+                : _bot.HighestRespondedMessageId;
         }
     }
 }

@@ -55,7 +55,9 @@ namespace EnLitenTelegramBot.Worker
                     _logger.LogInformation($"Processing update with ID: { update.UpdateId } which contains message by ID: { update.Message.MessageId } and text: { update.Message.Text }");
                     try
                     {
-                        await _botService.SendMessage(update.Message.Chat.Id, "How <i><b>you</b></i> doin'?");
+                        await _botService.SendMessage(update.Message.Chat.Id, 
+                            "How <i><b>you</b></i> doin'?", 
+                            update.Message.MessageId);
                     }
                     catch(HttpRequestException e)
                     {
