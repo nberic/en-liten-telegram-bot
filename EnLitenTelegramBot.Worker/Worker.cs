@@ -31,6 +31,8 @@ namespace EnLitenTelegramBot.Worker
             IEnumerable<Update> updates = null;
             while (!stoppingToken.IsCancellationRequested)
             {
+
+                #region GetUpdates
                 try
                 {
                     updates = await _botService.GetUpdates();
@@ -45,6 +47,27 @@ namespace EnLitenTelegramBot.Worker
                 }
                 
                 _logger.LogInformation($"Returned updates: { updates }");
+                #endregion
+
+                #region RespondToUpdates
+                foreach (var update in updates)
+                {
+                    _logger.LogInformation($"Processing update with ID: { update.UpdateId } which contains message by ID: { update.Message.MessageId } and text: { update.Message.Text }");
+                    try
+                    {
+                        await _botService.SendMessage(update.Message.Chat.Id, "How <i><b>you</b></i> doin'?");
+                    }
+                    catch(HttpRequestException e)
+                    {
+                        _logger.LogCritical(e.StackTrace);
+                    }
+                    catch(Exception e)
+                    {
+                        _logger.LogCritical(e.StackTrace);
+                    }
+                }
+                #endregion
+
                 await Task.Delay(5000, stoppingToken);
             }
         }

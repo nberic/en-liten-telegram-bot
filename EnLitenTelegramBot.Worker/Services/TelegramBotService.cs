@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Text.Json;
 using EnLitenTelegramBot.Worker.Models.ApiTypes;
 using System.Collections.Generic;
+using System.Text;
 
 namespace EnLitenTelegramBot.Worker.Services
 {
@@ -24,8 +25,10 @@ namespace EnLitenTelegramBot.Worker.Services
             _httpClientFactory = httpClientFactory;
         }
 
-        // TODO: Finish the code so it can parse the response
-        // response model can be found in file 
+        /// <summary>
+        /// Get all message updates from the getUpdates URL
+        /// </summary>
+        /// <returns>List of Update objects</returns>
         public async Task<IEnumerable<Update>> GetUpdates()
         {
             _logger.LogInformation($"Getting updates from the URL: { _bot.UpdatesUrl }");
@@ -43,15 +46,51 @@ namespace EnLitenTelegramBot.Worker.Services
             }
             catch (HttpRequestException e)
             {
-                _logger.LogError($"Exception occured: { e.ToString() }");
+                _logger.LogError(e.ToString());
             }
             catch (Exception e)
             {
-                _logger.LogError($"Exception occured: { e.ToString() }");
+                _logger.LogError(e.ToString());
             }
 
             _logger.LogInformation($"Returned payload is: { updates }");
             return updates;
+        }
+
+        /// <summary>
+        /// Send a message to a chat
+        /// </summary>
+        /// <param name="chatId"> ID of the chat to which the message will be sent</param>
+        /// <param name="text"> Text which will be sent to the chat</param>
+        /// <returns></returns>
+        public async Task SendMessage(int chatId, string text)
+        {
+            var httpClient = _httpClientFactory.CreateClient();
+
+            var payloadContent = new ResponseMesssage()
+            {
+                ChatId = chatId,
+                Text = text,
+                ParseMode = "HTML"
+            };
+            var payload = new StringContent(JsonSerializer.Serialize(payloadContent), 
+                Encoding.UTF8, 
+                "application/json");
+            _logger.LogInformation($"Sending message by posting to the URL: { _bot.SendUrl }, to chat with ID: { chatId } and message content of: { text }");
+
+            try
+            {
+                var response = await httpClient.PostAsync(_bot.SendUrl, payload);
+                _logger.LogInformation($"Response returned with status code: { response.StatusCode } and the reason phrase: { response.ReasonPhrase }");
+            }
+            catch (HttpRequestException e)
+            {
+                _logger.LogError(e.ToString());
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.ToString());
+            }
         }
     }
 }

@@ -5,7 +5,8 @@ namespace EnLitenTelegramBot.Worker.Models
 {
     public interface IBot
     {
-        public string ApiUrl { get; }
-        public string UpdatesUrl { get; }
+        string ApiUrl { get; }
+        string UpdatesUrl { get; }
+        string SendUrl { get; }
     }
 }

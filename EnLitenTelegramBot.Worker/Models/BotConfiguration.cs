@@ -5,5 +5,6 @@ namespace EnLitenTelegramBot.Worker.Models
     {
         public string Token { get; set; }
         public string UpdatesMethod { get; set; }
+        public string SendMethod { get; set; }
     }
 }
