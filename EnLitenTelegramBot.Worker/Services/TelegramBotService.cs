@@ -4,6 +4,9 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Text.Json;
+using EnLitenTelegramBot.Worker.Models.ApiTypes;
+using System.Collections.Generic;
 
 namespace EnLitenTelegramBot.Worker.Services
 {
@@ -23,23 +26,32 @@ namespace EnLitenTelegramBot.Worker.Services
 
         // TODO: Finish the code so it can parse the response
         // response model can be found in file 
-        public async Task<string> GetUpdates()
+        public async Task<IEnumerable<Update>> GetUpdates()
         {
             _logger.LogInformation($"Getting updates from the URL: { _bot.UpdatesUrl }");
             var httpClient = _httpClientFactory.CreateClient();
 
-            string response = null;
+            IEnumerable<Update> updates = null;
             try
             {
-                response = await httpClient.GetStringAsync($"{ _bot.UpdatesUrl }");
+                var payload = await httpClient.GetStreamAsync(_bot.UpdatesUrl);
+                var getUpdatesResponse = await JsonSerializer.DeserializeAsync<GetUpdatesResponse>(payload);
+                _logger.LogInformation($"Returned payload is: { JsonSerializer.Serialize(getUpdatesResponse) }");
+                
+                updates = getUpdatesResponse.Result;
+
+            }
+            catch (HttpRequestException e)
+            {
+                _logger.LogError($"Exception occured: { e.ToString() }");
             }
             catch (Exception e)
             {
                 _logger.LogError($"Exception occured: { e.ToString() }");
             }
 
-            _logger.LogInformation($"Returned payload is: { response }");
-            return response;
+            _logger.LogInformation($"Returned payload is: { updates }");
+            return updates;
         }
     }
 }

@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using EnLitenTelegramBot.Worker.Models;
+using EnLitenTelegramBot.Worker.Models.ApiTypes;
 using EnLitenTelegramBot.Worker.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -25,12 +27,17 @@ namespace EnLitenTelegramBot.Worker
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation($"Worker running at { DateTimeOffset.Now }");
+            
+            IEnumerable<Update> updates = null;
             while (!stoppingToken.IsCancellationRequested)
             {
-                string updates = null;
                 try
                 {
                     updates = await _botService.GetUpdates();
+                }
+                catch (HttpRequestException e)
+                {
+                    _logger.LogCritical(e.StackTrace);
                 }
                 catch (Exception e)
                 {
@@ -39,7 +46,6 @@ namespace EnLitenTelegramBot.Worker
                 
                 _logger.LogInformation($"Returned updates: { updates }");
                 await Task.Delay(5000, stoppingToken);
-
             }
         }
     }
