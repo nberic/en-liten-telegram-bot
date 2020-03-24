@@ -17,7 +17,6 @@ namespace EnLitenTelegramBot.Worker.Services
         private readonly IBot _bot;
         private readonly ILogger _logger;
         private readonly IHttpClientFactory _httpClientFactory;
-        private const string GET_UPDATES_PATH = "getUpdates";
 
         public TelegramBotService(ILogger<TelegramBotService> logger, IBot bot, IHttpClientFactory httpClientFactory)
         {
@@ -54,10 +53,10 @@ namespace EnLitenTelegramBot.Worker.Services
                 _logger.LogError(e.ToString());
             }
 
-            _logger.LogInformation($"Returned payload is: { updates }");
+            _logger.LogInformation($"Returned payload is: { JsonSerializer.Serialize(updates) }");
 
             // return only updates to which it hasn't been responded
-            return updates.Where(update => update.Message.MessageId > _bot.HighestRespondedMessageId);
+            return updates.Where(update => update.UpdateId > _bot.HighestRespondedUpdateId);
         }
 
         /// <summary>
@@ -66,7 +65,7 @@ namespace EnLitenTelegramBot.Worker.Services
         /// <param name="chatId"> ID of the chat to which the message will be sent</param>
         /// <param name="text"> Text which will be sent to the chat</param>
         /// <returns></returns>
-        public async Task SendMessage(int chatId, string text, int messageId)
+        public async Task SendMessage(int chatId, string text, int updateId)
         {
             var httpClient = _httpClientFactory.CreateClient();
 
@@ -95,9 +94,9 @@ namespace EnLitenTelegramBot.Worker.Services
                 _logger.LogError(e.ToString());
             }
             // update the highest responed messageId
-            _bot.HighestRespondedMessageId = messageId > _bot.HighestRespondedMessageId
-                ? messageId
-                : _bot.HighestRespondedMessageId;
+            _bot.HighestRespondedUpdateId = updateId > _bot.HighestRespondedUpdateId
+                ? updateId
+                : _bot.HighestRespondedUpdateId;
         }
     }
 }
