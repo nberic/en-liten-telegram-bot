@@ -56,7 +56,7 @@ namespace EnLitenTelegramBot.Worker
                     _logger.LogInformation($"Processing update with ID: { update.UpdateId } which contains message by ID: { update.Message.MessageId } and text: { update.Message.Text }");
                     try
                     {
-                        await _botService.SendMessageAsync(update.Message.Chat.Id, 
+                        await _botService.SendTextMessageAsync(update.Message.Chat.Id, 
                             "How <i><b>you</b></i> doin'?", 
                             update.UpdateId);
                     }
@@ -70,6 +70,31 @@ namespace EnLitenTelegramBot.Worker
                     }
                 }
                 #endregion
+
+                // set values for the reply keyboard
+                var replyKeyboard = new ReplyKeyboardMarkup();
+                replyKeyboard.Keyboard = new List<List<KeyboardButton>>()
+                {
+                    new List<KeyboardButton>()
+                    {
+                        new KeyboardButton() { Text = "1" },
+                        new KeyboardButton() { Text = "2" },
+                        new KeyboardButton() { Text = "3" }
+                    },
+                    new List<KeyboardButton>()
+                    {
+                        new KeyboardButton() { Text = "4" },
+                        new KeyboardButton() { Text = "5" },
+                        new KeyboardButton() { Text = "6" }
+                    },
+                    new List<KeyboardButton>()
+                    {
+                        new KeyboardButton() { Text = "7" },
+                        new KeyboardButton() { Text = "8" },
+                        new KeyboardButton() { Text = "9" }
+                    },
+                };
+                await _botService.SendKeyboardMessageAsync(1127648888, "What is your favorite number?", replyKeyboard, 907889274);
 
                 await Task.Delay(5000, stoppingToken);
             }

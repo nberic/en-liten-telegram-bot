@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using EnLitenTelegramBot.Worker.Models.ApiTypes;
 
 namespace EnLitenTelegramBot.Worker.Models
 {
@@ -12,5 +13,8 @@ namespace EnLitenTelegramBot.Worker.Models
 
         [JsonPropertyName("parse_mode")]
         public string ParseMode { get; set; }
+
+        [JsonPropertyName("reply_markup")]
+        public IReplyMarkup ReplyMarkup { get; set; }
     }
 }

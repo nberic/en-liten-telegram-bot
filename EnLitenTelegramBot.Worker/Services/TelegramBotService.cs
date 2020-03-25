@@ -60,12 +60,13 @@ namespace EnLitenTelegramBot.Worker.Services
         }
 
         /// <summary>
-        /// Send a message to a chat
+        /// Send a text message to a chat
         /// </summary>
         /// <param name="chatId"> ID of the chat to which the message will be sent</param>
         /// <param name="text"> Text which will be sent to the chat</param>
-        /// <returns></returns>
-        public async Task SendMessageAsync(int chatId, string text, int updateId)
+        /// <param name="updateId"> ID of the update the message corresponds to </param>
+        /// <returns>Task</returns>
+        public async Task SendTextMessageAsync(int chatId, string text, int updateId)
         {
             var httpClient = _httpClientFactory.CreateClient();
 
@@ -76,6 +77,49 @@ namespace EnLitenTelegramBot.Worker.Services
                 ParseMode = "HTML"
             };
             var payload = new StringContent(JsonSerializer.Serialize(payloadContent), 
+                Encoding.UTF8, 
+                "application/json");
+            _logger.LogInformation($"Sending message by posting to the URL: { _bot.SendUrl }, to chat with ID: { chatId } and message content of: { text }");
+
+            try
+            {
+                var response = await httpClient.PostAsync(_bot.SendUrl, payload);
+                _logger.LogInformation($"Response returned with status code: { response.StatusCode } and the reason phrase: { response.ReasonPhrase }");
+            }
+            catch (HttpRequestException e)
+            {
+                _logger.LogError(e.ToString());
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.ToString());
+            }
+            // update the highest responed messageId
+            _bot.HighestRespondedUpdateId = updateId > _bot.HighestRespondedUpdateId
+                ? updateId
+                : _bot.HighestRespondedUpdateId;
+        }
+
+        /// <summary>
+        /// Send a message with a reply keyboard
+        /// </summary>
+        /// <param name="chatId"> ID of the chat to which the message will be sent</param>
+        /// <param name="text"> Text part of the message that will be sent </param>
+        /// <param name="updateId"> ID of the update the message corresponds to</param>
+        /// <returns></returns>
+        public async Task SendKeyboardMessageAsync(int chatId, string text, IReplyMarkup replyMarkup, int updateId)
+        {
+            var httpClient = _httpClientFactory.CreateClient();
+
+            var payloadContent = new ResponseMesssage()
+            {
+                ChatId = chatId,
+                Text = text,
+                ParseMode = "HTML",
+                ReplyMarkup = replyMarkup
+            };
+            var serializedPayloadContent = JsonSerializer.Serialize(payloadContent);
+            var payload = new StringContent(serializedPayloadContent, 
                 Encoding.UTF8, 
                 "application/json");
             _logger.LogInformation($"Sending message by posting to the URL: { _bot.SendUrl }, to chat with ID: { chatId } and message content of: { text }");
