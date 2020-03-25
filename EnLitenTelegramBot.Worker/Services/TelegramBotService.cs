@@ -29,7 +29,7 @@ namespace EnLitenTelegramBot.Worker.Services
         /// Get all message updates from the getUpdates URL
         /// </summary>
         /// <returns>List of Update objects</returns>
-        public async Task<IEnumerable<Update>> GetUpdates()
+        public async Task<IEnumerable<Update>> GetUpdatesAsync()
         {
             _logger.LogInformation($"Getting updates from the URL: { _bot.UpdatesUrl }");
             var httpClient = _httpClientFactory.CreateClient();
@@ -65,7 +65,7 @@ namespace EnLitenTelegramBot.Worker.Services
         /// <param name="chatId"> ID of the chat to which the message will be sent</param>
         /// <param name="text"> Text which will be sent to the chat</param>
         /// <returns></returns>
-        public async Task SendMessage(int chatId, string text, int updateId)
+        public async Task SendMessageAsync(int chatId, string text, int updateId)
         {
             var httpClient = _httpClientFactory.CreateClient();
 
