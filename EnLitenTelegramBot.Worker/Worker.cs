@@ -31,12 +31,7 @@ namespace EnLitenTelegramBot.Worker
             _botService = botService;
             _botConfiguration = botConfiguration;
             DEFAULT_UPDATE_RESONSE = $"Sorry, but I can't understand you.\r\nIn order to start a quiz type {START_MESSAGE}";
-        }
-
-        public override Task StartAsync(CancellationToken cancellationToken)
-        {
-            previousResponses = new Dictionary<string, LatestUserResponse>();
-            return Task.CompletedTask;
+            previousResponses = previousResponses = new Dictionary<string, LatestUserResponse>();
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
