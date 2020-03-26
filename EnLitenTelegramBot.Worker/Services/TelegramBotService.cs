@@ -55,6 +55,8 @@ namespace EnLitenTelegramBot.Worker.Services
 
             _logger.LogInformation("Returned payload is: {payload}", JsonSerializer.Serialize(updates));
 
+
+            // TODO: prevent answering to already answered messages.
             return updates;
         }
 
