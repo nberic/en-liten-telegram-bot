@@ -18,17 +18,15 @@ namespace EnLitenTelegramBot.Worker.Services
         /// </summary>
         /// <param name="chatId"> ID of the chat to which the message will be sent</param>
         /// <param name="text"> Text which will be sent to the chat</param>
-        /// <param name="updateId"> ID of the update the message corresponds to </param>
         /// <returns>Task</returns>
-        Task SendTextMessageAsync(int chatId, string text, int updateId);
+        Task SendTextMessageAsync(int chatId, string text);
 
         /// <summary>
         /// Send a message with a reply keyboard
         /// </summary>
         /// <param name="chatId"> ID of the chat to which the message will be sent</param>
-        /// <param name="text"> Text part of the message that will be sent </param>
-        /// <param name="updateId"> ID of the update the message corresponds to</param>
+        /// <param name="previouslyAskedQuestionIndex"> Index of previous question to which the user has answered </param>
         /// <returns>Task</returns>
-        Task SendKeyboardMessageAsync(int chatId, string text, IReplyMarkup replyMarkup, int updateId);
+        Task SendKeyboardMessageAsync(int chatId, int previouslyAskedQuestionIndex);
     }
 }

@@ -18,11 +18,22 @@ namespace EnLitenTelegramBot.Worker
     {
         private readonly ILogger<Worker> _logger;
         private readonly IBotService _botService;
+        private Dictionary<string, int> previousResponses;
+        private const string START_MESSAGE = "/start";
+        private const int FIRST_QUESTION_INDEX = 0;
+        private readonly string DEFAULT_UPDATE_RESONSE;
 
         public Worker(ILogger<Worker> logger, IBotService botService)
         {
             _logger = logger;
             _botService = botService;
+            DEFAULT_UPDATE_RESONSE = $"Sorry, but I can't understand you.\r\nIn order to start a quiz type {START_MESSAGE}";
+        }
+
+        public override Task StartAsync(CancellationToken cancellationToken)
+        {
+            previousResponses = new Dictionary<string, int>();
+            return Task.CompletedTask;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -30,10 +41,13 @@ namespace EnLitenTelegramBot.Worker
             _logger.LogInformation("Worker running at {StartingTime}", DateTimeOffset.Now);
             
             IEnumerable<Update> updates = null;
+            int previouslyAskedQuestionIndex = 0; // the index of question that was previously asked
+
             while (!stoppingToken.IsCancellationRequested)
             {
 
                 #region GetUpdates
+                // get message updates
                 try
                 {
                     updates = await _botService.GetUpdatesAsync();
@@ -51,14 +65,44 @@ namespace EnLitenTelegramBot.Worker
                 #endregion
 
                 #region RespondToUpdates
+                // respond to each message update
                 foreach (var update in updates)
                 {
                     _logger.LogInformation("Processing update with ID: {updateId} which contains message by ID: {messageId} and text: {messageText}", update.UpdateId, update.Message.MessageId, update.Message.Text);
+                    
+                    // dont' answer to anyone but me
+                    if (!update.Message.From.Username.Equals("nberic"))
+                    {
+                        continue;
+                    }
+
+                    // respond to message update depending on message content and previous question index
                     try
                     {
-                        await _botService.SendTextMessageAsync(update.Message.Chat.Id, 
-                            "How <i><b>you</b></i> doin'?", 
-                            update.UpdateId);
+                        // if it's the /start message
+                        if (update.Message.Text.Equals(START_MESSAGE))
+                        {
+                            await _botService.SendKeyboardMessageAsync(update.Message.Chat.Id, FIRST_QUESTION_INDEX);
+
+                            _logger.LogInformation("Question number {questionNumber} sent to user {userId}", FIRST_QUESTION_INDEX, update.Message.From.Id);
+                            previousResponses.Add(update.Message.From.Id.ToString(), FIRST_QUESTION_INDEX);
+                        }
+                        // if it's a response to an answer
+                        else if (previousResponses.TryGetValue(update.Message.From.Id.ToString(), out previouslyAskedQuestionIndex))
+                        {
+                            await _botService.SendKeyboardMessageAsync(update.Message.Chat.Id, previouslyAskedQuestionIndex);
+
+                            previousResponses[update.Message.From.Id.ToString()] = ++previouslyAskedQuestionIndex;
+                            _logger.LogInformation("Question number {questionNumber} sent to user {userId}", previouslyAskedQuestionIndex, update.Message.From.Id);
+                        }
+                        // if it's any other message
+                        else
+                        {
+                            await _botService.SendTextMessageAsync(update.Message.Chat.Id, DEFAULT_UPDATE_RESONSE);
+                                
+                            _logger.LogInformation("Generic response sent to user {userId} for unprocessable message with text {messageText}", update.Message.From.Id, update.Message.Text);
+                            
+                        }
                     }
                     catch(HttpRequestException e)
                     {
@@ -70,31 +114,6 @@ namespace EnLitenTelegramBot.Worker
                     }
                 }
                 #endregion
-
-                // set values for the reply keyboard
-                var replyKeyboard = new ReplyKeyboardMarkup();
-                replyKeyboard.Keyboard = new List<List<KeyboardButton>>()
-                {
-                    new List<KeyboardButton>()
-                    {
-                        new KeyboardButton() { Text = "1" },
-                        new KeyboardButton() { Text = "2" },
-                        new KeyboardButton() { Text = "3" }
-                    },
-                    new List<KeyboardButton>()
-                    {
-                        new KeyboardButton() { Text = "4" },
-                        new KeyboardButton() { Text = "5" },
-                        new KeyboardButton() { Text = "6" }
-                    },
-                    new List<KeyboardButton>()
-                    {
-                        new KeyboardButton() { Text = "7" },
-                        new KeyboardButton() { Text = "8" },
-                        new KeyboardButton() { Text = "9" }
-                    },
-                };
-                await _botService.SendKeyboardMessageAsync(1127648888, "What is your favorite number?", replyKeyboard, 907889274);
 
                 await Task.Delay(5000, stoppingToken);
             }

@@ -55,8 +55,7 @@ namespace EnLitenTelegramBot.Worker.Services
 
             _logger.LogInformation("Returned payload is: {payload}", JsonSerializer.Serialize(updates));
 
-            // return only updates to which it hasn't been responded
-            return updates.Where(update => update.UpdateId > _bot.HighestRespondedUpdateId);
+            return updates;
         }
 
         /// <summary>
@@ -64,9 +63,8 @@ namespace EnLitenTelegramBot.Worker.Services
         /// </summary>
         /// <param name="chatId"> ID of the chat to which the message will be sent</param>
         /// <param name="text"> Text which will be sent to the chat</param>
-        /// <param name="updateId"> ID of the update the message corresponds to </param>
         /// <returns>Task</returns>
-        public async Task SendTextMessageAsync(int chatId, string text, int updateId)
+        public async Task SendTextMessageAsync(int chatId, string text)
         {
             var httpClient = _httpClientFactory.CreateClient();
 
@@ -94,29 +92,38 @@ namespace EnLitenTelegramBot.Worker.Services
             {
                 _logger.LogError(ex, "Error occurred while sending the message");
             }
-            // update the highest responed messageId
-            _bot.HighestRespondedUpdateId = updateId > _bot.HighestRespondedUpdateId
-                ? updateId
-                : _bot.HighestRespondedUpdateId;
         }
 
         /// <summary>
         /// Send a message with a reply keyboard
         /// </summary>
         /// <param name="chatId"> ID of the chat to which the message will be sent</param>
-        /// <param name="text"> Text part of the message that will be sent </param>
-        /// <param name="updateId"> ID of the update the message corresponds to</param>
+        /// <param name="previouslyAskedQuestionIndex"> Index of previous question to which the user has answered </param>
         /// <returns></returns>
-        public async Task SendKeyboardMessageAsync(int chatId, string text, IReplyMarkup replyMarkup, int updateId)
+        public async Task SendKeyboardMessageAsync(int chatId, int previouslyAskedQuestionIndex)
         {
             var httpClient = _httpClientFactory.CreateClient();
+            var text = _bot.QuizQuestions[previouslyAskedQuestionIndex + 1].Question;
+
+            // set values for the reply keyboard
+            var replyKeyboard = new ReplyKeyboardMarkup();
+            replyKeyboard.Keyboard = new List<List<KeyboardButton>>();
+            foreach (var row in _bot.QuizQuestions[previouslyAskedQuestionIndex + 1].Answers)
+            {
+                var rowOfAnswers = new List<KeyboardButton>();
+                foreach(var answer in row)
+                {
+                    rowOfAnswers.Append(new KeyboardButton() { Text = answer.Text });
+                }
+                replyKeyboard.Keyboard.Append(rowOfAnswers);
+            }
 
             var payloadContent = new ResponseMesssage()
             {
                 ChatId = chatId,
                 Text = text,
                 ParseMode = "HTML",
-                ReplyMarkup = replyMarkup
+                ReplyMarkup = replyKeyboard
             };
             var serializedPayloadContent = JsonSerializer.Serialize(payloadContent);
             var payload = new StringContent(serializedPayloadContent, 
@@ -137,10 +144,6 @@ namespace EnLitenTelegramBot.Worker.Services
             {
                 _logger.LogError(ex, "Error occurred while sending the message");
             }
-            // update the highest responed messageId
-            _bot.HighestRespondedUpdateId = updateId > _bot.HighestRespondedUpdateId
-                ? updateId
-                : _bot.HighestRespondedUpdateId;
         }
     }
 }
