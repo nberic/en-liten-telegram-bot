@@ -31,7 +31,7 @@ namespace EnLitenTelegramBot.Worker.Services
         /// <returns>List of Update objects</returns>
         public async Task<IEnumerable<Update>> GetUpdatesAsync()
         {
-            _logger.LogInformation($"Getting updates from the URL: { _bot.UpdatesUrl }");
+            _logger.LogInformation("Getting updates from the URL: { updatesUrl }", _bot.UpdatesUrl);
             var httpClient = _httpClientFactory.CreateClient();
 
             IEnumerable<Update> updates = null;
@@ -39,7 +39,7 @@ namespace EnLitenTelegramBot.Worker.Services
             {
                 var payload = await httpClient.GetStreamAsync(_bot.UpdatesUrl);
                 var getUpdatesResponse = await JsonSerializer.DeserializeAsync<GetUpdatesResponse>(payload);
-                _logger.LogInformation($"Returned payload is: { JsonSerializer.Serialize(getUpdatesResponse) }");
+                _logger.LogInformation("Returned payload is: { payload }", JsonSerializer.Serialize(getUpdatesResponse));
                 
                 updates = getUpdatesResponse.Result;
 
@@ -53,7 +53,7 @@ namespace EnLitenTelegramBot.Worker.Services
                 _logger.LogError(e.ToString());
             }
 
-            _logger.LogInformation($"Returned payload is: { JsonSerializer.Serialize(updates) }");
+            _logger.LogInformation("Returned payload is: { payload }", JsonSerializer.Serialize(updates));
 
             // return only updates to which it hasn't been responded
             return updates.Where(update => update.UpdateId > _bot.HighestRespondedUpdateId);
@@ -79,20 +79,20 @@ namespace EnLitenTelegramBot.Worker.Services
             var payload = new StringContent(JsonSerializer.Serialize(payloadContent), 
                 Encoding.UTF8, 
                 "application/json");
-            _logger.LogInformation($"Sending message by posting to the URL: { _bot.SendUrl }, to chat with ID: { chatId } and message content of: { text }");
+            _logger.LogInformation("Sending message by posting to the URL: { sendUrl }, to chat with ID: { chatId } and message content of: { messageText }", _bot.SendUrl, chatId, text);
 
             try
             {
                 var response = await httpClient.PostAsync(_bot.SendUrl, payload);
-                _logger.LogInformation($"Response returned with status code: { response.StatusCode } and the reason phrase: { response.ReasonPhrase }");
+                _logger.LogInformation("Response returned with status code: { statusCode } and the reason phrase: { responsePhrase }", response.StatusCode, response.ReasonPhrase);
             }
-            catch (HttpRequestException e)
+            catch (HttpRequestException ex)
             {
-                _logger.LogError(e.ToString());
+                _logger.LogError(ex, "Error occurred while sending the message");
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                _logger.LogError(e.ToString());
+                _logger.LogError(ex, "Error occurred while sending the message");
             }
             // update the highest responed messageId
             _bot.HighestRespondedUpdateId = updateId > _bot.HighestRespondedUpdateId
@@ -122,20 +122,20 @@ namespace EnLitenTelegramBot.Worker.Services
             var payload = new StringContent(serializedPayloadContent, 
                 Encoding.UTF8, 
                 "application/json");
-            _logger.LogInformation($"Sending message by posting to the URL: { _bot.SendUrl }, to chat with ID: { chatId } and message content of: { text }");
+            _logger.LogInformation("Sending message by posting to the URL: { sendUrl }, to chat with ID: { chatId } and message content of: { messageText }", _bot.SendUrl, chatId, text);
 
             try
             {
                 var response = await httpClient.PostAsync(_bot.SendUrl, payload);
-                _logger.LogInformation($"Response returned with status code: { response.StatusCode } and the reason phrase: { response.ReasonPhrase }");
+                _logger.LogInformation("Response returned with status code: { statusCode } and the reason phrase: { reasonPhrase }", response.StatusCode, response.ReasonPhrase);
             }
-            catch (HttpRequestException e)
+            catch (HttpRequestException ex)
             {
-                _logger.LogError(e.ToString());
+                _logger.LogError(ex, "Error occurred while sending the message");
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                _logger.LogError(e.ToString());
+                _logger.LogError(ex, "Error occurred while sending the message");
             }
             // update the highest responed messageId
             _bot.HighestRespondedUpdateId = updateId > _bot.HighestRespondedUpdateId
