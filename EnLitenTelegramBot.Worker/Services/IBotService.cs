@@ -1,6 +1,7 @@
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using EnLitenTelegramBot.Worker.Models;
 using EnLitenTelegramBot.Worker.Models.ApiTypes;
 
 namespace EnLitenTelegramBot.Worker.Services
@@ -10,8 +11,9 @@ namespace EnLitenTelegramBot.Worker.Services
         /// <summary>
         /// Get all message updates from the getUpdates URL
         /// </summary>
+        /// <param name="previousResponses"> Dictionary of latest responses by users</param>
         /// <returns>List of Update objects</returns>
-        Task<IEnumerable<Update>> GetUpdatesAsync();
+        Task<IEnumerable<Update>> GetUpdatesAsync(Dictionary<string, LatestUserResponse> previousResponses);
         
         /// <summary>
         /// Send a text message to a chat

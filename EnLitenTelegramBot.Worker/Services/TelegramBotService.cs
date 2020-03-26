@@ -29,7 +29,7 @@ namespace EnLitenTelegramBot.Worker.Services
         /// Get all message updates from the getUpdates URL
         /// </summary>
         /// <returns>List of Update objects</returns>
-        public async Task<IEnumerable<Update>> GetUpdatesAsync()
+        public async Task<IEnumerable<Update>> GetUpdatesAsync(Dictionary<string, LatestUserResponse> previousResponses)
         {
             _logger.LogInformation("Getting updates from the URL: {updatesUrl}", _bot.UpdatesUrl);
             var httpClient = _httpClientFactory.CreateClient();
@@ -55,9 +55,13 @@ namespace EnLitenTelegramBot.Worker.Services
 
             _logger.LogInformation("Returned payload is: {payload}", JsonSerializer.Serialize(updates));
 
-
-            // TODO: prevent answering to already answered messages.
-            return updates;
+            return updates.Where(update => 
+            {
+                LatestUserResponse userResponse = null;
+                previousResponses.TryGetValue(update.Message.From.Id.ToString(), out userResponse);
+                int previouslyAskedQuestionIndex = userResponse?.LatestUpdateId ?? 0;
+                return update.UpdateId > previouslyAskedQuestionIndex;
+            });
         }
 
         /// <summary>
