@@ -27,7 +27,7 @@ namespace EnLitenTelegramBot.Worker
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Worker running at { StartingTime }", DateTimeOffset.Now);
+            _logger.LogInformation("Worker running at {StartingTime}", DateTimeOffset.Now);
             
             IEnumerable<Update> updates = null;
             while (!stoppingToken.IsCancellationRequested)
@@ -47,13 +47,13 @@ namespace EnLitenTelegramBot.Worker
                     _logger.LogCritical(e.StackTrace);
                 }
                 
-                _logger.LogInformation("Returned updates: { Updates }", JsonSerializer.Serialize(updates));
+                _logger.LogInformation("Returned updates: {Updates}", JsonSerializer.Serialize(updates));
                 #endregion
 
                 #region RespondToUpdates
                 foreach (var update in updates)
                 {
-                    _logger.LogInformation("Processing update with ID: { updateId } which contains message by ID: { messageId } and text: { messageText }", update.UpdateId, update.Message.MessageId, update.Message.Text);
+                    _logger.LogInformation("Processing update with ID: {updateId} which contains message by ID: {messageId} and text: {messageText}", update.UpdateId, update.Message.MessageId, update.Message.Text);
                     try
                     {
                         await _botService.SendTextMessageAsync(update.Message.Chat.Id, 

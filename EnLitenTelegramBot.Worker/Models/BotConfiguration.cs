@@ -1,4 +1,6 @@
 ﻿
+using System.Collections.Generic;
+
 namespace EnLitenTelegramBot.Worker.Models
 {
     public class BotConfiguration
@@ -7,5 +9,6 @@ namespace EnLitenTelegramBot.Worker.Models
         public string UpdatesMethod { get; set; }
         public string SendMethod { get; set; }
         public int HighestRespondedUpdateId { get; set; }
+        public IEnumerable<QuizQuestion> QuizQuestions { get; set; }
     }
 }

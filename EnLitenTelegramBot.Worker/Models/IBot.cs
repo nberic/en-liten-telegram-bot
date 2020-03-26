@@ -1,5 +1,6 @@
 
 using System;
+using System.Collections.Generic;
 
 namespace EnLitenTelegramBot.Worker.Models
 {
@@ -9,5 +10,6 @@ namespace EnLitenTelegramBot.Worker.Models
         string ApiUrl { get; }
         string UpdatesUrl { get; }
         string SendUrl { get; }
+        IEnumerable<QuizQuestion> QuizQuestions { get; }
     }
 }
