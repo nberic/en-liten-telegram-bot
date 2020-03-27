@@ -31,6 +31,7 @@ namespace EnLitenTelegramBot.Worker.Services
         /// <returns>List of Update objects</returns>
         public async Task<IEnumerable<Update>> GetUpdatesAsync(Dictionary<string, LatestUserResponse> previousResponses)
         {
+            var momentOfEntry = DateTime.Now;
             _logger.LogInformation("Getting updates from the URL: {updatesUrl}", _bot.UpdatesUrl);
             var httpClient = _httpClientFactory.CreateClient();
 
@@ -55,20 +56,32 @@ namespace EnLitenTelegramBot.Worker.Services
 
             _logger.LogInformation("Returned payload is: {payload}", JsonSerializer.Serialize(updates));
 
-            return updates.Where(update =>
+            return updates.Where(update => IsLatestUserUpdate(update, previousResponses, momentOfEntry));
+        }
+
+        /// <summary>
+        /// Decides if the bot should respond to a message update,
+        /// depending on date of the message sending,
+        /// type of conversation etc.
+        /// </summary>
+        /// <param name="update"> Message update for which we are deciding if we are going to respond to it</param>
+        /// <param name="previousResponses"> Dictionary of previous responses by users </param>
+        /// <returns> Bool which means should we respond to the update or not </returns>
+        private bool IsLatestUserUpdate(Update update, Dictionary<string, LatestUserResponse> previousResponses, DateTime momentOfEntry)
+        {
+            const int MESSAGE_DURATION_OFFSET_IN_SECONDS = -15;
+            var tresholdMoment = momentOfEntry.AddSeconds(MESSAGE_DURATION_OFFSET_IN_SECONDS);
+            var messageDate = Message.UnixTimestampToDateTime(update.Message.Date);
+            if (messageDate < tresholdMoment || !update.Message.Chat.Type.Equals("private"))
             {
-                var messageDate = Message.UnixTimestampToDateTime(update.Message.Date).AddSeconds(30);
-                if (messageDate < DateTime.Now)
-                {
-                    return false;
-                }
-                LatestUserResponse userResponse = null;
-                previousResponses.TryGetValue(update.Message.From.Id.ToString(), out userResponse);
-                int previouslyAskedQuestionIndex = userResponse?.LatestUpdateId ?? 0;
-                bool isQuizFinished = userResponse?.IsQuizFinished ?? false;
-                // respond only to private chats
-                return !isQuizFinished && update.UpdateId > previouslyAskedQuestionIndex && update.Message.Chat.Type == "private";
-            });
+                return false;
+            }
+            LatestUserResponse userResponse = null;
+            previousResponses.TryGetValue(update.Message.From.Id.ToString(), out userResponse);
+            int previouslyAskedQuestionIndex = userResponse?.LatestUpdateId ?? 0;
+            bool isQuizFinished = userResponse?.IsQuizFinished ?? false;
+            // respond only to private chats
+            return !isQuizFinished && update.UpdateId > previouslyAskedQuestionIndex;
         }
 
         /// <summary>
@@ -81,16 +94,17 @@ namespace EnLitenTelegramBot.Worker.Services
         {
             var httpClient = _httpClientFactory.CreateClient();
 
-            var payloadContent = new ResponseMesssage()
+            var payloadContent = new ShrinkedResponseMesssage()
             {
                 ChatId = chatId,
                 Text = text,
                 ParseMode = "HTML"
             };
-            var payload = new StringContent(JsonSerializer.Serialize(payloadContent),
+            var serializedPayloadContent = JsonSerializer.Serialize(payloadContent);
+            var payload = new StringContent(serializedPayloadContent,
                 Encoding.UTF8,
                 "application/json");
-            _logger.LogInformation("Sending message by posting to the URL: {sendUrl}, to chat with ID: {chatId} and message content of: {messageText}", _bot.SendUrl, chatId, text);
+            _logger.LogInformation("Sending message by posting to the URL: {sendUrl}, to chat with ID: {chatId} and message content of: \"{messageText}\"", _bot.SendUrl, chatId, text);
 
             try
             {

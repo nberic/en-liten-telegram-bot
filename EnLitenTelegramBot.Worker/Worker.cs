@@ -66,13 +66,7 @@ namespace EnLitenTelegramBot.Worker
                 // respond to each message update
                 foreach (var update in updates)
                 {
-                    _logger.LogInformation("Processing update with ID: {updateId} which contains message by ID: {messageId} and text: {messageText}", update.UpdateId, update.Message.MessageId, update.Message.Text);
-                    
-                    // dont' answer to anyone but me
-                    if (!update.Message.From.Username.Equals("nberic"))
-                    {
-                        continue;
-                    }
+                    _logger.LogInformation("Processing update with ID: {updateId} which contains message by ID: {messageId} and text: \"{messageText}\"", update.UpdateId, update.Message.MessageId, update.Message.Text);
 
                     // respond to message update depending on message content and previous question index
                     try
@@ -91,12 +85,13 @@ namespace EnLitenTelegramBot.Worker
                         else if (previousResponses.TryGetValue(update.Message.From.Id.ToString(), out latestUserResponse))
                         {
                             // if it was the last question
-                            if (latestUserResponse.PreviouslyAskedQuestionIndex == _botConfiguration.QuizQuestions.Count)
+                            // TODO: check for last message correctly
+                            if (latestUserResponse.PreviouslyAskedQuestionIndex == _botConfiguration.QuizQuestions.Count - 1)
                             {
                                 await _botService.SendTextMessageAsync(update.Message.Chat.Id, THANK_YOU_MESSAGE);
 
                                 previousResponses[update.Message.Chat.Id.ToString()].IsQuizFinished = true;
-                                _logger.LogInformation("Thank you message sent to {userId} for last quiz answer message with text {messageText}", update.Message.From.Id, update.Message.Text);
+                                _logger.LogInformation("Thank you message sent to {userId} for last quiz answer message with text \"{messageText}\"", update.Message.From.Id, update.Message.Text);
                             
                             }
                             // otherwise
@@ -116,7 +111,7 @@ namespace EnLitenTelegramBot.Worker
                         {
                             await _botService.SendTextMessageAsync(update.Message.Chat.Id, DEFAULT_UPDATE_RESONSE);
                                 
-                            _logger.LogInformation("Generic response sent to user {userId} for unprocessable message with text {messageText}", update.Message.From.Id, update.Message.Text);
+                            _logger.LogInformation("Generic response sent to user {userId} for unprocessable message with text \"{messageText}\"", update.Message.From.Id, update.Message.Text);
                             
                         }
                     }
