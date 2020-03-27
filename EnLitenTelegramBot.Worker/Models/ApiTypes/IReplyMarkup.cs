@@ -7,6 +7,6 @@ namespace EnLitenTelegramBot.Worker.Models.ApiTypes
     public interface IReplyMarkup
     {
         [JsonPropertyName("keyboard")]
-        IEnumerable<IEnumerable<KeyboardButton>> Keyboard { get; set; }
+        List<List<KeyboardButton>> Keyboard { get; set; }
     }
 }

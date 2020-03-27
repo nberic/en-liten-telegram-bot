@@ -40,7 +40,7 @@ namespace EnLitenTelegramBot.Worker.Services
                 var payload = await httpClient.GetStreamAsync(_bot.UpdatesUrl);
                 var getUpdatesResponse = await JsonSerializer.DeserializeAsync<GetUpdatesResponse>(payload);
                 _logger.LogInformation("Returned payload is: {payload}", JsonSerializer.Serialize(getUpdatesResponse));
-                
+
                 updates = getUpdatesResponse.Result;
 
             }
@@ -55,12 +55,14 @@ namespace EnLitenTelegramBot.Worker.Services
 
             _logger.LogInformation("Returned payload is: {payload}", JsonSerializer.Serialize(updates));
 
-            return updates.Where(update => 
+            return updates.Where(update =>
             {
                 LatestUserResponse userResponse = null;
                 previousResponses.TryGetValue(update.Message.From.Id.ToString(), out userResponse);
                 int previouslyAskedQuestionIndex = userResponse?.LatestUpdateId ?? 0;
-                return update.UpdateId > previouslyAskedQuestionIndex;
+                bool isQuizFinished = userResponse?.IsQuizFinished ?? false;
+                // respond only to private chats
+                return !isQuizFinished && update.UpdateId > previouslyAskedQuestionIndex && update.Message.Chat.Type == "private";
             });
         }
 
@@ -80,15 +82,23 @@ namespace EnLitenTelegramBot.Worker.Services
                 Text = text,
                 ParseMode = "HTML"
             };
-            var payload = new StringContent(JsonSerializer.Serialize(payloadContent), 
-                Encoding.UTF8, 
+            var payload = new StringContent(JsonSerializer.Serialize(payloadContent),
+                Encoding.UTF8,
                 "application/json");
             _logger.LogInformation("Sending message by posting to the URL: {sendUrl}, to chat with ID: {chatId} and message content of: {messageText}", _bot.SendUrl, chatId, text);
 
             try
             {
                 var response = await httpClient.PostAsync(_bot.SendUrl, payload);
-                _logger.LogInformation("Response returned with status code: {statusCode} and the reason phrase: {responsePhrase}", response.StatusCode, response.ReasonPhrase);
+                if (response.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation("Response returned successfully with status code: {statusCode}", response.StatusCode);
+                }
+                else
+                {
+                    var contents = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("Response returned error with status code: {statusCode} and contents: {contents}", response.StatusCode, contents);
+                }
             }
             catch (HttpRequestException ex)
             {
@@ -117,11 +127,11 @@ namespace EnLitenTelegramBot.Worker.Services
             foreach (var row in _bot.QuizQuestions[previouslyAskedQuestionIndex + 1].Answers)
             {
                 var rowOfAnswers = new List<KeyboardButton>();
-                foreach(var answer in row)
+                foreach (var answer in row)
                 {
-                    rowOfAnswers.Append(new KeyboardButton() { Text = answer.Text });
+                    rowOfAnswers.Add(new KeyboardButton() { Text = answer.Text });
                 }
-                replyKeyboard.Keyboard.Append(rowOfAnswers);
+                replyKeyboard.Keyboard.Add(rowOfAnswers);
             }
 
             var payloadContent = new ResponseMesssage()
@@ -132,15 +142,23 @@ namespace EnLitenTelegramBot.Worker.Services
                 ReplyMarkup = replyKeyboard
             };
             var serializedPayloadContent = JsonSerializer.Serialize(payloadContent);
-            var payload = new StringContent(serializedPayloadContent, 
-                Encoding.UTF8, 
+            var payload = new StringContent(serializedPayloadContent,
+                Encoding.UTF8,
                 "application/json");
             _logger.LogInformation("Sending message by posting to the URL: {sendUrl}, to chat with ID: {chatId} and message content of: {messageText}", _bot.SendUrl, chatId, text);
 
             try
             {
                 var response = await httpClient.PostAsync(_bot.SendUrl, payload);
-                _logger.LogInformation("Response returned with status code: {statusCode} and the reason phrase: {reasonPhrase}", response.StatusCode, response.ReasonPhrase);
+                if (response.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation("Response returned successfully with status code: {statusCode}", response.StatusCode);
+                }
+                else
+                {
+                    var contents = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("Response returned error with status code: {statusCode} and contents: {contents}", response.StatusCode, contents);
+                }
             }
             catch (HttpRequestException ex)
             {

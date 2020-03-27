@@ -59,7 +59,7 @@ namespace EnLitenTelegramBot.Worker
                     _logger.LogCritical(e.StackTrace);
                 }
                 
-                _logger.LogInformation("Returned updates: {Updates}", JsonSerializer.Serialize(updates));
+                _logger.LogInformation("Returned updates: {updates}", JsonSerializer.Serialize(updates));
                 #endregion
 
                 #region RespondToUpdates
@@ -80,7 +80,7 @@ namespace EnLitenTelegramBot.Worker
                         // if it's the /start message
                         if (update.Message.Text.Equals(START_MESSAGE))
                         {
-                            await _botService.SendKeyboardMessageAsync(update.Message.Chat.Id, FIRST_QUESTION_INDEX);
+                            await _botService.SendKeyboardMessageAsync(update.Message.Chat.Id, FIRST_QUESTION_INDEX - 1);
 
                             _logger.LogInformation("Question number {questionNumber} sent to user {userId}", FIRST_QUESTION_INDEX, update.Message.From.Id);
 
@@ -94,7 +94,8 @@ namespace EnLitenTelegramBot.Worker
                             if (latestUserResponse.PreviouslyAskedQuestionIndex == _botConfiguration.QuizQuestions.Count - 1)
                             {
                                 await _botService.SendTextMessageAsync(update.Message.Chat.Id, THANK_YOU_MESSAGE);
-                                
+
+                                previousResponses[update.Message.Chat.Id.ToString()].IsQuizFinished = true;
                                 _logger.LogInformation("Thank you message sent to {userId} for last quiz answer message with text {messageText}", update.Message.From.Id, update.Message.Text);
                             
                             }
