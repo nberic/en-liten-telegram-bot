@@ -1,9 +1,10 @@
 using System.Text.Json.Serialization;
 using EnLitenTelegramBot.Worker.Models.ApiTypes;
+using Newtonsoft.Json;
 
 namespace EnLitenTelegramBot.Worker.Models
 {
-    public class ResponseMesssage
+    public class ShrinkedResponseMesssage
     {
         [JsonPropertyName("chat_id")]
         public int ChatId { get; set; }
@@ -13,8 +14,5 @@ namespace EnLitenTelegramBot.Worker.Models
 
         [JsonPropertyName("parse_mode")]
         public string ParseMode { get; set; }
-
-        [JsonPropertyName("reply_markup")]
-        public IReplyMarkup ReplyMarkup { get; set; }
     }
 }

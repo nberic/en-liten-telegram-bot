@@ -74,7 +74,7 @@ namespace EnLitenTelegramBot.Worker.Models.ApiTypes
         /// </summary>
         /// <param name="timestamp">Number of seconds since the epoch</param>
         /// <returns><c>System.DateTime</c> representation of UNIX timestamp</returns>
-        private DateTime UnixTimestampToDateTime(int? timestamp)
+        internal static DateTime UnixTimestampToDateTime(int? timestamp)
         {
             var secondsCount = timestamp ?? throw new ArgumentException("The UNIX timestamp cannot be null.");
             var epoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
