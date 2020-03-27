@@ -1,11 +1,11 @@
 
 using EnLitenTelegramBot.Worker.Models;
+using EnLitenTelegramBot.Worker.Models.ApiTypes;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Text.Json;
-using EnLitenTelegramBot.Worker.Models.ApiTypes;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
@@ -57,6 +57,11 @@ namespace EnLitenTelegramBot.Worker.Services
 
             return updates.Where(update =>
             {
+                var messageDate = Message.UnixTimestampToDateTime(update.Message.Date).AddSeconds(30);
+                if (messageDate < DateTime.Now)
+                {
+                    return false;
+                }
                 LatestUserResponse userResponse = null;
                 previousResponses.TryGetValue(update.Message.From.Id.ToString(), out userResponse);
                 int previouslyAskedQuestionIndex = userResponse?.LatestUpdateId ?? 0;

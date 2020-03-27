@@ -91,7 +91,7 @@ namespace EnLitenTelegramBot.Worker
                         else if (previousResponses.TryGetValue(update.Message.From.Id.ToString(), out latestUserResponse))
                         {
                             // if it was the last question
-                            if (latestUserResponse.PreviouslyAskedQuestionIndex == _botConfiguration.QuizQuestions.Count - 1)
+                            if (latestUserResponse.PreviouslyAskedQuestionIndex == _botConfiguration.QuizQuestions.Count)
                             {
                                 await _botService.SendTextMessageAsync(update.Message.Chat.Id, THANK_YOU_MESSAGE);
 
